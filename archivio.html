@@ -168,7 +168,7 @@
   .chatbot-messages {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: hidden;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -341,7 +341,6 @@
   .chatbot-input-field {
     flex: 1;
     min-height: 44px;
-    max-height: 120px;
     padding: 11px 15px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -352,7 +351,7 @@
     line-height: 1.35;
     transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     overflow-x: hidden;
     white-space: pre-wrap;
     word-break: break-word;
@@ -717,6 +716,7 @@
       saveMemory();
 
       textInput.value = "";
+      resizeChatInput();
       removeImgBtn.click(); 
       
       const typingId = showTypingIndicator();
@@ -749,8 +749,9 @@
     }
 
     function resizeChatInput() {
+      // Fa espandere tutta la casella di scrittura, senza limite massimo.
       textInput.style.height = 'auto';
-      textInput.style.height = Math.min(textInput.scrollHeight, 120) + 'px';
+      textInput.style.height = textInput.scrollHeight + 'px';
     }
 
     sendBtn.addEventListener('click', sendMessage);
