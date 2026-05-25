@@ -252,6 +252,7 @@
   }
 
   .chatbot-header {
+    flex-shrink: 0;
     padding: 18px 20px;
     background: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -289,8 +290,10 @@
 
   .chatbot-messages {
     flex: 1;
+    min-height: 0;
     padding: 20px;
-    overflow-y: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -325,7 +328,7 @@
   .msg-bubble {
     overflow-wrap: anywhere;
     word-break: break-word;
-    overflow-x: auto;
+    overflow: visible;
     white-space: normal;
   }
 
@@ -452,6 +455,7 @@
   }
 
   .chatbot-input-area {
+    flex-shrink: 0;
     padding: 15px 20px;
     background: rgba(255, 255, 255, 0.9);
     border-top: 1px solid rgba(0, 0, 0, 0.05);
