@@ -626,6 +626,23 @@ input[type="file"]::file-selector-button:hover {
   font-size: 0.9rem;
 }
 
+
+/* Correzione mobile: centra il pannello notifiche nello schermo così non esce tagliato ai lati. */
+@media (max-width: 768px) {
+  .notification-panel {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(360px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    max-height: min(65vh, 420px);
+  }
+
+  .notification-list {
+    max-height: min(55vh, 340px);
+  }
+}
+
 /* =========================================
    RESPONSIVITÀ (Smartphone e Tablet)
    ========================================= */
