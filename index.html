@@ -315,6 +315,76 @@
     animation: msgFadeIn 0.3s ease forwards;
   }
 
+
+  .msg-bubble,
+  .msg-bubble * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .msg-bubble {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: auto;
+    white-space: normal;
+  }
+
+  .msg-bubble br + br {
+    display: block;
+    content: "";
+    margin-top: 8px;
+  }
+
+  .chatbot-heading {
+    font-weight: 700;
+    color: #4f46e5;
+    margin: 6px 0 4px;
+  }
+
+  .chatbot-list {
+    margin: 6px 0 6px 18px;
+    padding-left: 8px;
+  }
+
+  .chatbot-list li {
+    margin: 4px 0;
+  }
+
+  .chatbot-inline-code {
+    background: rgba(15, 23, 42, 0.08);
+    padding: 2px 5px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+
+  .chatbot-code-block {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 10px;
+    border-radius: 12px;
+    margin: 8px 0;
+    font-family: monospace;
+    font-size: 0.88em;
+    white-space: pre;
+  }
+
+  .msg-bubble .MathJax,
+  .msg-bubble mjx-container {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .msg-bubble mjx-container[display="true"] {
+    display: block !important;
+    text-align: left !important;
+    padding: 4px 0;
+  }
+
   @keyframes msgFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -659,10 +729,41 @@
     });
 
     function formatText(text) {
-      return text
+      // Converte il markdown più comune in HTML pulito e sicuro.
+      // Serve a non mostrare asterischi, cancelletti e liste come testo grezzo.
+      const escapeHtml = (value) => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+      const codeBlocks = [];
+      let html = escapeHtml(text).replace(/\r\n/g, '\n');
+
+      html = html.replace(/```([\s\S]*?)```/g, (_, code) => {
+        const placeholder = `@@CODEBLOCK_${codeBlocks.length}@@`;
+        codeBlocks.push(`<pre class="chatbot-code-block"><code>${code.trim()}</code></pre>`);
+        return placeholder;
+      });
+
+      html = html
+        .replace(/^#{1,6}\s+(.+)$/gm, '<div class="chatbot-heading">$1</div>')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<strong>$1</strong>')
+        .replace(/(^|[^*])\*(?!\s)([^*]+?)\*(?!\*)/g, '$1<em>$2</em>')
+        .replace(/`([^`]+?)`/g, '<code class="chatbot-inline-code">$1</code>')
+        .replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>[\s\S]*?<\/li>)(\n<li>[\s\S]*?<\/li>)*/g, (match) => `<ul class="chatbot-list">${match.replace(/\n/g, '')}</ul>`)
+        .replace(/\n{2,}/g, '<br><br>')
         .replace(/\n/g, '<br>');
+
+      codeBlocks.forEach((block, index) => {
+        html = html.replace(`@@CODEBLOCK_${index}@@`, block);
+      });
+
+      return html;
     }
 
     function addMessage(text, sender, imgSrc = null) {
