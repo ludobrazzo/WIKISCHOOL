@@ -334,20 +334,28 @@
     background: rgba(255, 255, 255, 0.9);
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 5px; /* Ridotto il gap per far stare i pulsanti comodamente */
   }
 
   .chatbot-input-field {
     flex: 1;
-    padding: 12px 15px;
+    min-height: 44px;
+    max-height: 120px;
+    padding: 11px 15px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 24px;
+    border-radius: 22px;
     outline: none;
     font-family: inherit;
     font-size: 0.95rem;
-    transition: all 0.2s ease;
+    line-height: 1.35;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    resize: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   .chatbot-input-field:focus {
@@ -451,7 +459,7 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
       </button>
       
-      <input type="text" id="chatbot-text-input" class="chatbot-input-field" placeholder="Chiedi a WikiBot...">
+      <textarea id="chatbot-text-input" class="chatbot-input-field" rows="1" placeholder="Chiedi a WikiBot..."></textarea>
       
       <button id="chatbot-send-btn" class="chatbot-btn chatbot-send-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -740,10 +748,20 @@
       }
     }
 
+    function resizeChatInput() {
+      textInput.style.height = 'auto';
+      textInput.style.height = Math.min(textInput.scrollHeight, 120) + 'px';
+    }
+
     sendBtn.addEventListener('click', sendMessage);
+
+    textInput.addEventListener('input', resizeChatInput);
     
-    textInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
+    textInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
     if (sessionStorage.getItem('wikibot_panel_open') === 'true') {
