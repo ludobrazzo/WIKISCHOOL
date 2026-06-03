@@ -117,20 +117,26 @@ function startNotifications(user) {
       const project = docSnap.data();
       const title = project.title || "un tuo appunto";
 
+      const likeDetails = Array.isArray(project.likeDetails) ? project.likeDetails : [];
+      const likeDetailByUid = new Map(likeDetails.map((like) => [like.uid, like]));
+
       (project.likes || []).forEach((uid) => {
         if (uid === user.uid) return;
+        const likeInfo = likeDetailByUid.get(uid) || {};
+        const authorName = likeInfo.authorName || "Qualcuno";
+        const likeDate = likeInfo.timestamp || project.createdAt || "";
         notifications.push({
-          id: `like_${docSnap.id}_${uid}`,
+          id: `like_${docSnap.id}_${uid}_${normalizeNotificationDate(likeDate) || "old"}`,
           type: "like",
-          text: `Qualcuno ha messo like a “${title}”.`,
-          date: project.updatedAt || project.createdAt || ""
+          text: `${authorName} ha messo like a “${title}”.`,
+          date: likeDate
         });
       });
 
       (project.comments || []).forEach((comment, index) => {
         if (comment.authorUid === user.uid) return;
         notifications.push({
-          id: `comment_${docSnap.id}_${comment.authorUid || "anon"}_${comment.timestamp || index}`,
+          id: `comment_${docSnap.id}_${comment.authorUid || "anon"}_${normalizeNotificationDate(comment.timestamp) || index}`,
           type: "comment",
           text: `${comment.authorName || "Qualcuno"} ha commentato “${title}”: ${comment.text || ""}`,
           date: comment.timestamp || project.createdAt || ""
@@ -138,7 +144,7 @@ function startNotifications(user) {
       });
     });
 
-    currentNotifications = notifications.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    currentNotifications = notifications.sort((a, b) => normalizeNotificationDate(b.date) - normalizeNotificationDate(a.date));
     renderNotifications(user.uid);
   }, (err) => {
     console.error("Errore notifiche:", err);
@@ -189,10 +195,18 @@ function renderNotifications(uid = currentUser?.uid) {
 }
 
 // Converte una data tecnica in una data leggibile.
-function formatNotificationDate(value) {
-  if (!value) return "";
+function normalizeNotificationDate(value) {
+  if (!value) return 0;
+  if (typeof value.toDate === "function") return value.toDate().getTime();
+  if (typeof value.seconds === "number") return value.seconds * 1000;
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+
+function formatNotificationDate(value) {
+  const time = normalizeNotificationDate(value);
+  if (!time) return "";
+  const date = new Date(time);
   return date.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 

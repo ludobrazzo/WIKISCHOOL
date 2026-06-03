@@ -293,13 +293,32 @@ window.toggleLike = async (docId, btnElement) => {
   const docRef = doc(db, "projects", docId);
   const countSpan = btnElement.querySelector(".like-count");
   let currentCount = parseInt(countSpan.innerText);
+  const userName = currentUser.displayName || "Studente";
+
+  const snap = await getDoc(docRef);
+  const data = snap.exists() ? snap.data() : {};
+  const likeDetails = Array.isArray(data.likeDetails) ? data.likeDetails : [];
+  const likeDetailsWithoutUser = likeDetails.filter((like) => like.uid !== currentUser.uid);
 
   if (btnElement.classList.contains("active-like")) {
-    await updateDoc(docRef, { likes: arrayRemove(currentUser.uid) });
+    await updateDoc(docRef, {
+      likes: arrayRemove(currentUser.uid),
+      likeDetails: likeDetailsWithoutUser
+    });
     btnElement.classList.remove("active-like");
-    countSpan.innerText = currentCount - 1;
+    countSpan.innerText = Math.max(currentCount - 1, 0);
   } else {
-    await updateDoc(docRef, { likes: arrayUnion(currentUser.uid) });
+    await updateDoc(docRef, {
+      likes: arrayUnion(currentUser.uid),
+      likeDetails: [
+        ...likeDetailsWithoutUser,
+        {
+          uid: currentUser.uid,
+          authorName: userName,
+          timestamp: new Date().toISOString()
+        }
+      ]
+    });
     btnElement.classList.add("active-like");
     countSpan.innerText = currentCount + 1;
   }
